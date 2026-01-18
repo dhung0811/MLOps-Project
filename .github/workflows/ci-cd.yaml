@@ -15,7 +15,7 @@ env:
   DOCKER_USERNAME: dhung04
   IMAGE_NAME: codebuggy
   GITOPS_REPO: dhung0811/codebuggy-k8s
-  GITOPS_BRANCH: dev
+  GITOPS_BRANCH: main
   GITOPS_PATH: dev
 
 jobs:
