@@ -127,11 +127,6 @@ jobs:
             echo "📝 Committing changes..."
             git commit -m "🚀 Update codebuggy image to ${NEW_TAG}
 
-Automated update by GitHub Actions
-Source commit: ${{ github.sha }}
-Workflow: ${{ github.workflow }}
-Run: ${{ github.run_number }}"
-            
             echo ""
             echo "🚀 Pushing to ${{ env.GITOPS_REPO }}@${{ env.GITOPS_BRANCH }}..."
             git push https://x-access-token:${{ secrets.GITOPS_TOKEN }}@github.com/${{ env.GITOPS_REPO }}.git HEAD:${{ env.GITOPS_BRANCH }}
