@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeBuggy - Bug Detection System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🐛 CodeBuggy Detector</h1>
+            <p class="subtitle">AI-powered bug detection for Java code</p>
+            <a href="/examples" class="examples-link">📚 View All Examples</a>
+        </header>
+
+        <div class="main-content">
+            <div class="examples-section">
+                <label for="example-select">📚 Load Example:</label>
+                <select id="example-select">
+                    <option value="">-- Select an example --</option>
+                    {% for example in examples %}
+                    <option value="{{ example.id }}">{{ example.name }} - {{ example.description }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="input-section">
+                <div class="code-input">
+                    <h2>Buggy Code (Before Fix)</h2>
+                    <textarea id="buggy-code" placeholder="Paste your buggy Java code here...">public int sum(int[] arr) {
+    int s = 0;
+    for (int i = 0; i <= arr.length; i++) {
+        s += arr[i];
+    }
+    return s;
+}</textarea>
+                </div>
+
+                <div class="code-input">
+                    <h2>Fixed Code (After Fix)</h2>
+                    <textarea id="fixed-code" placeholder="Paste your fixed Java code here...">public int sum(int[] arr) {
+    int s = 0;
+    for (int i = 0; i < arr.length; i++) {
+        s += arr[i];
+    }
+    return s;
+}</textarea>
+                </div>
+            </div>
+
+            <div class="action-section">
+                <button id="predict-btn" class="btn-primary">
+                    <span class="btn-text">Analyze Code</span>
+                    <span class="btn-loading" style="display: none;">Analyzing...</span>
+                </button>
+                <button id="clear-btn" class="btn-secondary">Clear</button>
+            </div>
+
+            <div id="results" class="results-section" style="display: none;">
+                <h2>Analysis Results</h2>
+                
+                <div class="graph-result">
+                    <h3>Overall Bug Probability</h3>
+                    <div class="probability-bar">
+                        <div id="graph-prob-fill" class="probability-fill"></div>
+                        <span id="graph-prob-text" class="probability-text">0%</span>
+                    </div>
+                </div>
+
+                <div class="stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Nodes:</span>
+                        <span id="num-nodes" class="stat-value">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Edges:</span>
+                        <span id="num-edges" class="stat-value">-</span>
+                    </div>
+                </div>
+
+                <div class="node-predictions">
+                    <h3>Top Bug Locations</h3>
+                    <div id="predictions-table"></div>
+                </div>
+            </div>
+
+            <div id="error" class="error-section" style="display: none;">
+                <h3>Error</h3>
+                <p id="error-message"></p>
+            </div>
+        </div>
+
+        <footer>
+            <p>Powered by MLflow & GraphCodeBERT</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

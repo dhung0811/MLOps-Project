@@ -1,0 +1,83 @@
+================================================================================
+ENVIRONMENT VARIABLES SUMMARY - CodeBuggy Docker
+================================================================================
+
+BUILD-TIME VARIABLES (Cannot override without rebuild):
+------------------------------------------------------------------------
+JAVA_HOME           = /usr/lib/jvm/default-java
+PATH                = ${PATH}:/usr/lib/jvm/default-java/bin
+PYTHONUNBUFFERED    = 1
+
+Purpose: Used during docker build and baked into image
+Used by: GumTree, Java commands, Python logging
+
+
+RUNTIME VARIABLES (Can override):
+------------------------------------------------------------------------
+MLFLOW_URI          = http://host.docker.internal:5000 (default)
+                      http://mlflow:5000 (docker-compose override)
+MODEL_NAME          = codebuggy-detector
+MODEL_STAGE         = Version 3
+PORT                = 8080
+
+Purpose: Application configuration, can change without rebuild
+Used by: app.py, inference.py, Flask
+
+
+HOW TO OVERRIDE:
+------------------------------------------------------------------------
+1. docker-compose.yml (Recommended for different environments)
+   environment:
+     - MLFLOW_URI=http://mlflow:5000
+     - MODEL_STAGE=Production
+
+2. docker run -e (Quick testing)
+   docker run -e MLFLOW_URI=http://test:5000 codebuggy-app
+
+3. .env file (Sensitive data)
+   MLFLOW_URI=http://mlflow:5000
+   MODEL_STAGE=Production
+
+
+PRECEDENCE ORDER (Highest to Lowest):
+------------------------------------------------------------------------
+1. docker run -e VAR=value          (Command line)
+2. docker-compose.yml environment   (Compose file)
+3. docker-compose.yml env_file      (.env file)
+4. Dockerfile ENV                   (Image default)
+
+
+COMMON SCENARIOS:
+------------------------------------------------------------------------
+Development:
+  MLFLOW_URI=http://host.docker.internal:5000
+  MODEL_STAGE=Version 3
+
+Production:
+  MLFLOW_URI=https://mlflow.production.com
+  MODEL_STAGE=Production
+
+Testing:
+  MLFLOW_URI=http://mlflow-test:5000
+  MODEL_STAGE=Staging
+
+
+CHECK VARIABLES:
+------------------------------------------------------------------------
+# In running container
+docker-compose exec codebuggy-app env | grep -E "MLFLOW|MODEL|PORT"
+
+# Before starting
+docker run --rm codebuggy-app env | grep -E "MLFLOW|MODEL|PORT"
+
+
+DOCUMENTATION:
+------------------------------------------------------------------------
+ENV_QUICK_REF.md          - Quick reference card
+ENVIRONMENT_VARIABLES.md  - Complete documentation
+ENV_FLOW_DIAGRAM.md       - Visual diagrams
+ENV_SUMMARY.txt           - This file
+
+================================================================================
+Last Updated: 2026-01-18
+================================================================================

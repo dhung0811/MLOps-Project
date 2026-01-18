@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: codebuggy-config
+  namespace: codebuggy
+data:
+  MLFLOW_URI: "http://10.98.216.25:5000"
+  MODEL_NAME: "codebuggy-detector"
+  MODEL_STAGE: "Version 3"
+  PORT: "8080"

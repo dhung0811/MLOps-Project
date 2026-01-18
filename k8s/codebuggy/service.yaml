@@ -1,0 +1,34 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: codebuggy
+  namespace: codebuggy
+  labels:
+    app: codebuggy
+spec:
+  type: ClusterIP
+  selector:
+    app: codebuggy
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: codebuggy-external
+  namespace: codebuggy
+  labels:
+    app: codebuggy
+spec:
+  type: NodePort
+  selector:
+    app: codebuggy
+  ports:
+  - port: 8080
+    targetPort: 8080
+    nodePort: 30800
+    protocol: TCP
+    name: http

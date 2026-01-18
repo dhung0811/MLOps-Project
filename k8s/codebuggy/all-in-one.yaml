@@ -1,0 +1,137 @@
+# All-in-one deployment file for CodeBuggy
+# Apply with: kubectl apply -f all-in-one.yaml
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: codebuggy
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: codebuggy-output
+  namespace: codebuggy
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: codebuggy-config
+  namespace: codebuggy
+data:
+  MLFLOW_URI: "http://mlflow.mlops.svc.cluster.local:5000"
+  MODEL_NAME: "codebuggy-detector"
+  MODEL_STAGE: "Version 3"
+  PORT: "8080"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: codebuggy-app
+  namespace: codebuggy
+  labels:
+    app: codebuggy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: codebuggy
+  template:
+    metadata:
+      labels:
+        app: codebuggy
+    spec:
+      containers:
+      - name: codebuggy
+        image: dhung04/codebuggy:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: MLFLOW_URI
+          value: "http://mlflow.mlops.svc.cluster.local:5000"
+        - name: MODEL_NAME
+          value: "codebuggy-detector"
+        - name: MODEL_STAGE
+          value: "Version 3"
+        - name: PORT
+          value: "8080"
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        volumeMounts:
+        - name: output
+          mountPath: /app/output
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+      volumes:
+      - name: output
+        persistentVolumeClaim:
+          claimName: codebuggy-output
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: codebuggy
+  namespace: codebuggy
+  labels:
+    app: codebuggy
+spec:
+  type: ClusterIP
+  selector:
+    app: codebuggy
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: http
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: codebuggy-external
+  namespace: codebuggy
+  labels:
+    app: codebuggy
+spec:
+  type: NodePort
+  selector:
+    app: codebuggy
+  ports:
+  - port: 8080
+    targetPort: 8080
+    nodePort: 30800
+    protocol: TCP
+    name: http

@@ -1,0 +1,6 @@
+# Flask Web App Requirements
+flask==3.0.0
+werkzeug==3.0.1
+
+# Include all codebuggy requirements
+-r codebuggy_requirements_docker.txt
