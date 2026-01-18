@@ -75,26 +75,26 @@ jobs:
           NEW_TAG="${{ steps.vars.outputs.short-sha }}"
           IMAGE="${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${NEW_TAG}"
           
-          echo "📂 Current directory: $(pwd)"
-          echo "📋 Files in current directory:"
+          echo "Current directory: $(pwd)"
+          echo "Files in current directory:"
           ls -la
           echo ""
-          echo "📋 Files in ${{ env.GITOPS_PATH }} directory:"
+          echo "Files in ${{ env.GITOPS_PATH }} directory:"
           ls -la ${{ env.GITOPS_PATH }}/
           echo ""
           
           # Update deployment.yaml in dev folder
           if [ -f "${{ env.GITOPS_PATH }}/deployment.yaml" ]; then
-            echo "📝 Updating ${{ env.GITOPS_PATH }}/deployment.yaml..."
+            echo "Updating ${{ env.GITOPS_PATH }}/deployment.yaml..."
             # Use sed with backup extension for macOS/BSD compatibility
             sed -i.bak "s|image: dhung04/codebuggy:.*|image: ${IMAGE}|g" "${{ env.GITOPS_PATH }}/deployment.yaml"
             rm -f "${{ env.GITOPS_PATH }}/deployment.yaml.bak"
-            echo "✅ Updated ${{ env.GITOPS_PATH }}/deployment.yaml with image: ${IMAGE}"
+            echo " Updated ${{ env.GITOPS_PATH }}/deployment.yaml with image: ${IMAGE}"
             echo ""
-            echo "📄 Updated content:"
+            echo "Updated content:"
             grep "image: dhung04/codebuggy" "${{ env.GITOPS_PATH }}/deployment.yaml"
           else
-            echo "❌ File ${{ env.GITOPS_PATH }}/deployment.yaml not found"
+            echo "File ${{ env.GITOPS_PATH }}/deployment.yaml not found"
             exit 1
           fi
           
@@ -102,11 +102,11 @@ jobs:
           if [ -f "${{ env.GITOPS_PATH }}/kustomization.yaml" ]; then
             sed -i.bak "s|newTag:.*|newTag: ${NEW_TAG}|g" "${{ env.GITOPS_PATH }}/kustomization.yaml"
             rm -f "${{ env.GITOPS_PATH }}/kustomization.yaml.bak"
-            echo "✅ Updated ${{ env.GITOPS_PATH }}/kustomization.yaml with newTag: ${NEW_TAG}"
+            echo "Updated ${{ env.GITOPS_PATH }}/kustomization.yaml with newTag: ${NEW_TAG}"
           fi
           
           echo ""
-          echo "🔍 Git status:"
+          echo " Git status:"
           git status
           echo ""
           
@@ -122,21 +122,22 @@ jobs:
           
           # Check if there are changes
           if git diff --staged --quiet; then
-            echo "ℹ️ No changes to commit"
+            echo "No changes to commit"
           else
-            echo "📝 Committing changes..."
-            git commit -m "🚀 Update codebuggy image to ${NEW_TAG}
-
+            echo "Committing changes..."
+            git commit -m "Update codebuggy image to ${NEW_TAG}" \
+                       -m "Automated by GitHub Actions (run ${{ github.run_number }})"
+            
             echo ""
-            echo "🚀 Pushing to ${{ env.GITOPS_REPO }}@${{ env.GITOPS_BRANCH }}..."
+            echo " Pushing to ${{ env.GITOPS_REPO }}@${{ env.GITOPS_BRANCH }}..."
             git push https://x-access-token:${{ secrets.GITOPS_TOKEN }}@github.com/${{ env.GITOPS_REPO }}.git HEAD:${{ env.GITOPS_BRANCH }}
             
-            echo "✅ Successfully pushed changes to GitOps repository"
+            echo "Successfully pushed changes to GitOps repository"
           fi
 
       - name: Summary
         run: |
-          echo "## ✅ CI/CD Complete" >> $GITHUB_STEP_SUMMARY
+          echo "## CI/CD Complete" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Image:** \`${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.short-sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
