@@ -64,7 +64,7 @@ jobs:
         with:
           repository: ${{ env.GITOPS_REPO }}
           token: ${{ secrets.GITOPS_TOKEN }}
-          ref: dev
+          ref: main
           path: gitops
 
       - name: Update GitOps repository
