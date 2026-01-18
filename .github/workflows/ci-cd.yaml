@@ -14,7 +14,9 @@ env:
   DOCKER_REGISTRY: docker.io
   DOCKER_USERNAME: dhung04
   IMAGE_NAME: codebuggy
-  GITOPS_REPO: ${{ secrets.GITOPS_REPO }}
+  GITOPS_REPO: dhung0811/codebuggy-k8s
+  GITOPS_BRANCH: dev
+  GITOPS_PATH: dev
 
 jobs:
   ci-cd:
@@ -64,7 +66,7 @@ jobs:
         with:
           repository: ${{ env.GITOPS_REPO }}
           token: ${{ secrets.GITOPS_TOKEN }}
-          ref: main
+          ref: ${{ env.GITOPS_BRANCH }}
           path: gitops
 
       - name: Update GitOps repository
@@ -73,14 +75,19 @@ jobs:
           NEW_TAG="${{ steps.vars.outputs.short-sha }}"
           IMAGE="${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${NEW_TAG}"
           
-          # Update kustomization.yaml
-          if [ -f "kustomization.yaml" ]; then
-            sed -i "s|newTag:.*|newTag: ${NEW_TAG}|g" kustomization.yaml
+          # Update deployment.yaml in dev folder
+          if [ -f "${{ env.GITOPS_PATH }}/deployment.yaml" ]; then
+            sed -i "s|image: dhung04/codebuggy:.*|image: ${IMAGE}|g" "${{ env.GITOPS_PATH }}/deployment.yaml"
+            echo "✅ Updated ${{ env.GITOPS_PATH }}/deployment.yaml with image: ${IMAGE}"
+          else
+            echo "❌ File ${{ env.GITOPS_PATH }}/deployment.yaml not found"
+            exit 1
           fi
           
-          # Update deployment.yaml
-          if [ -f "deployment.yaml" ]; then
-            sed -i "s|image:.*codebuggy:.*|image: ${IMAGE}|g" deployment.yaml
+          # Update kustomization.yaml if exists
+          if [ -f "${{ env.GITOPS_PATH }}/kustomization.yaml" ]; then
+            sed -i "s|newTag:.*|newTag: ${NEW_TAG}|g" "${{ env.GITOPS_PATH }}/kustomization.yaml"
+            echo "✅ Updated ${{ env.GITOPS_PATH }}/kustomization.yaml with newTag: ${NEW_TAG}"
           fi
           
           # Commit and push to dev branch
@@ -89,8 +96,11 @@ jobs:
           git add .
           
           if ! git diff --staged --quiet; then
-            git commit -m "Update image to ${NEW_TAG}"
-            git push origin main
+            git commit -m "🚀 Update codebuggy image to ${NEW_TAG}"
+            git push origin ${{ env.GITOPS_BRANCH }}
+            echo "✅ Pushed changes to ${{ env.GITOPS_REPO }}@${{ env.GITOPS_BRANCH }}"
+          else
+            echo "ℹ️ No changes to commit"
           fi
 
       - name: Summary
@@ -99,3 +109,4 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Image:** \`${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.short-sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**GitOps:** [\`${{ env.GITOPS_REPO }}@${{ env.GITOPS_BRANCH }}\`](https://github.com/${{ env.GITOPS_REPO }}/tree/${{ env.GITOPS_BRANCH }}/${{ env.GITOPS_PATH }})" >> $GITHUB_STEP_SUMMARY

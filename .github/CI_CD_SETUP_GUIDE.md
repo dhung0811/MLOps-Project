@@ -31,15 +31,15 @@ Single CI/CD workflow that builds Docker images and updates GitOps repository au
 
 ## Step 3: Set Up GitOps Repository
 
-Create a separate repository for Kubernetes manifests:
+Your GitOps repository is already set up at `dhung0811/codebuggy-k8s` with the following structure:
 
-```bash
-# Create new repository on GitHub (e.g., dhung04/codebuggy-gitops)
-git clone https://github.com/dhung04/codebuggy-gitops.git
-cd codebuggy-gitops
+```
+codebuggy-k8s (dev branch)
+└── dev/
+    └── deployment.yaml
 ```
 
-See [GITOPS_TEMPLATE.md](./GITOPS_TEMPLATE.md) for recommended structure.
+The CI/CD pipeline will automatically update `dev/deployment.yaml` with new image tags.
 
 ## Step 4: Configure GitHub Secrets
 
@@ -52,8 +52,9 @@ In your main repository:
 | Secret Name | Value | Description |
 |------------|-------|-------------|
 | `DOCKER_PASSWORD` | `<docker-hub-token>` | Docker Hub access token |
-| `GITOPS_REPO` | `dhung04/codebuggy-gitops` | GitOps repository (owner/repo) |
 | `GITOPS_TOKEN` | `<github-token>` | GitHub token for GitOps repo |
+
+**Note:** The GitOps repository (`dhung0811/codebuggy-k8s`) is already configured in the workflow.
 
 ## Step 5: Verify Workflow Configuration
 
@@ -105,10 +106,10 @@ docker images | grep codebuggy
 ### Check GitOps Repository
 
 ```bash
-cd codebuggy-gitops
+cd /path/to/codebuggy-k8s
+git checkout dev
 git pull
-cat kustomization.yaml  # Check newTag
-cat deployment.yaml     # Check image tag
+cat dev/deployment.yaml  # Check image tag
 ```
 
 ### Deploy to Kubernetes

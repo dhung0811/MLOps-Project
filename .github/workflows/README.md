@@ -30,8 +30,9 @@ Add these secrets in GitHub repository settings (Settings → Secrets and variab
 | Secret | Description | Example |
 |--------|-------------|---------|
 | `DOCKER_PASSWORD` | Docker Hub access token | `dckr_pat_xxx...` |
-| `GITOPS_REPO` | GitOps repository | `dhung04/codebuggy-gitops` |
 | `GITOPS_TOKEN` | GitHub token for GitOps repo | `ghp_xxx...` |
+
+**Note:** GitOps repository (`dhung0811/codebuggy-k8s`) is configured in the workflow.
 
 ### Setup Steps
 
@@ -48,52 +49,24 @@ Add these secrets in GitHub repository settings (Settings → Secrets and variab
 # Add as GITOPS_TOKEN secret
 ```
 
-#### 3. GitOps Repository
+### 3. GitOps Repository
+
 ```bash
-# Set GITOPS_REPO secret
-# Format: username/repository-name
+# Set GITOPS_TOKEN secret
+# The repository dhung0811/codebuggy-k8s is already configured
 ```
 
 ## GitOps Repository Structure
 
-Your GitOps repository should have this structure:
+Your GitOps repository structure:
 
 ```
-gitops-repo/
-├── kustomization.yaml
-├── deployment.yaml
-└── service.yaml
+codebuggy-k8s (dev branch)
+└── dev/
+    └── deployment.yaml
 ```
 
-### Example: kustomization.yaml
-```yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-
-namespace: codebuggy
-
-resources:
-  - deployment.yaml
-  - service.yaml
-
-images:
-  - name: dhung04/codebuggy
-    newTag: abc123  # Updated by CI/CD
-```
-
-### Example: deployment.yaml
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: codebuggy-app
-spec:
-  template:
-    spec:
-      containers:
-      - name: codebuggy
-        image: dhung04/codebuggy:abc123  # Updated by CI/CD
-```
+The pipeline automatically updates the image tag in `dev/deployment.yaml`.
 
 ## Usage
 

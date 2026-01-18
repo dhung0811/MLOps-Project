@@ -37,19 +37,20 @@ Code Push → Build Docker Image → Push to Docker Hub → Update GitOps Repo �
 | Secret | Description | Required |
 |--------|-------------|----------|
 | `DOCKER_PASSWORD` | Docker Hub token | ✅ Yes |
-| `GITOPS_REPO` | GitOps repository (username/repo) | ✅ Yes |
 | `GITOPS_TOKEN` | GitHub PAT for GitOps | ✅ Yes |
+
+**Note:** GitOps repository (`dhung0811/codebuggy-k8s`) is configured in the workflow.
 
 ### GitOps Repository
 
-Create repository with structure:
+Your GitOps repository structure:
 ```
-gitops-repo/
-├── kustomization.yaml
-└── deployment.yaml
+codebuggy-k8s (dev branch)
+└── dev/
+    └── deployment.yaml
 ```
 
-See `GITOPS_TEMPLATE.md` for complete template.
+The pipeline updates `dev/deployment.yaml` automatically.
 
 ## Usage
 
@@ -104,7 +105,10 @@ gh run watch
 open https://hub.docker.com/r/dhung04/codebuggy/tags
 
 # Check GitOps repo
-cd codebuggy-gitops && git pull
+cd /path/to/codebuggy-k8s
+git checkout dev
+git pull
+cat dev/deployment.yaml
 ```
 
 ## Workflow Diagram
