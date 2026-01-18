@@ -1,4 +1,5 @@
 name: CI/CD Pipeline
+run-name: Deploy (${{ github.ref_name }}) by @${{ github.actor }}
 
 on:
   push:
@@ -18,7 +19,7 @@ env:
 jobs:
   ci-cd:
     name: Build, Push and Deploy
-    runs-on: ubuntu-latest
+    runs-on: runner
     
     steps:
       - name: Checkout code
@@ -63,6 +64,7 @@ jobs:
         with:
           repository: ${{ env.GITOPS_REPO }}
           token: ${{ secrets.GITOPS_TOKEN }}
+          ref: dev
           path: gitops
 
       - name: Update GitOps repository
@@ -81,14 +83,14 @@ jobs:
             sed -i "s|image:.*codebuggy:.*|image: ${IMAGE}|g" deployment.yaml
           fi
           
-          # Commit and push
+          # Commit and push to dev branch
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add .
           
           if ! git diff --staged --quiet; then
             git commit -m "Update image to ${NEW_TAG}"
-            git push
+            git push origin dev
           fi
 
       - name: Summary
