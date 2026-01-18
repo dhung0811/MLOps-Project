@@ -75,10 +75,24 @@ jobs:
           NEW_TAG="${{ steps.vars.outputs.short-sha }}"
           IMAGE="${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${NEW_TAG}"
           
+          echo "📂 Current directory: $(pwd)"
+          echo "📋 Files in current directory:"
+          ls -la
+          echo ""
+          echo "📋 Files in ${{ env.GITOPS_PATH }} directory:"
+          ls -la ${{ env.GITOPS_PATH }}/
+          echo ""
+          
           # Update deployment.yaml in dev folder
           if [ -f "${{ env.GITOPS_PATH }}/deployment.yaml" ]; then
-            sed -i "s|image: dhung04/codebuggy:.*|image: ${IMAGE}|g" "${{ env.GITOPS_PATH }}/deployment.yaml"
+            echo "📝 Updating ${{ env.GITOPS_PATH }}/deployment.yaml..."
+            # Use sed with backup extension for macOS/BSD compatibility
+            sed -i.bak "s|image: dhung04/codebuggy:.*|image: ${IMAGE}|g" "${{ env.GITOPS_PATH }}/deployment.yaml"
+            rm -f "${{ env.GITOPS_PATH }}/deployment.yaml.bak"
             echo "✅ Updated ${{ env.GITOPS_PATH }}/deployment.yaml with image: ${IMAGE}"
+            echo ""
+            echo "📄 Updated content:"
+            grep "image: dhung04/codebuggy" "${{ env.GITOPS_PATH }}/deployment.yaml"
           else
             echo "❌ File ${{ env.GITOPS_PATH }}/deployment.yaml not found"
             exit 1
@@ -86,21 +100,43 @@ jobs:
           
           # Update kustomization.yaml if exists
           if [ -f "${{ env.GITOPS_PATH }}/kustomization.yaml" ]; then
-            sed -i "s|newTag:.*|newTag: ${NEW_TAG}|g" "${{ env.GITOPS_PATH }}/kustomization.yaml"
+            sed -i.bak "s|newTag:.*|newTag: ${NEW_TAG}|g" "${{ env.GITOPS_PATH }}/kustomization.yaml"
+            rm -f "${{ env.GITOPS_PATH }}/kustomization.yaml.bak"
             echo "✅ Updated ${{ env.GITOPS_PATH }}/kustomization.yaml with newTag: ${NEW_TAG}"
           fi
           
-          # Commit and push to dev branch
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git add .
+          echo ""
+          echo "🔍 Git status:"
+          git status
+          echo ""
           
-          if ! git diff --staged --quiet; then
-            git commit -m "🚀 Update codebuggy image to ${NEW_TAG}"
-            git push origin ${{ env.GITOPS_BRANCH }}
-            echo "✅ Pushed changes to ${{ env.GITOPS_REPO }}@${{ env.GITOPS_BRANCH }}"
-          else
+          # Configure git
+          git config user.name "GitHub Actions Bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Add changes
+          git add ${{ env.GITOPS_PATH }}/deployment.yaml
+          if [ -f "${{ env.GITOPS_PATH }}/kustomization.yaml" ]; then
+            git add ${{ env.GITOPS_PATH }}/kustomization.yaml
+          fi
+          
+          # Check if there are changes
+          if git diff --staged --quiet; then
             echo "ℹ️ No changes to commit"
+          else
+            echo "📝 Committing changes..."
+            git commit -m "🚀 Update codebuggy image to ${NEW_TAG}
+
+Automated update by GitHub Actions
+Source commit: ${{ github.sha }}
+Workflow: ${{ github.workflow }}
+Run: ${{ github.run_number }}"
+            
+            echo ""
+            echo "🚀 Pushing to ${{ env.GITOPS_REPO }}@${{ env.GITOPS_BRANCH }}..."
+            git push https://x-access-token:${{ secrets.GITOPS_TOKEN }}@github.com/${{ env.GITOPS_REPO }}.git HEAD:${{ env.GITOPS_BRANCH }}
+            
+            echo "✅ Successfully pushed changes to GitOps repository"
           fi
 
       - name: Summary
