@@ -90,7 +90,7 @@ jobs:
           
           if ! git diff --staged --quiet; then
             git commit -m "Update image to ${NEW_TAG}"
-            git push origin dev
+            git push origin main
           fi
 
       - name: Summary
